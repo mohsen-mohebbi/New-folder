@@ -1,0 +1,377 @@
+<div class="tab-content active">
+    <div class="content-list">
+        <div class="content-card" *ngFor="let card of contentList;let i = index" [attr.data-id]="card.id">
+            <div class="action-icons">
+                <div (click)="showmodal2=true;selected_content=card" class="icon-btn view tooltip"
+                    data-tooltip="نمایش محتوا">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                        <circle cx="12" cy="12" r="3"></circle>
+                    </svg>
+                </div>
+                <div (click)="editcontent(i)" class="icon-btn edit tooltip" data-tooltip="ویرایش محتوا">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                    </svg>
+                </div>
+            </div>
+
+            <div class="content-header">
+                <div class="content-avatar">
+                    <span>{{card.owner.name[0] + ' ' + card.owner.family[0] }}</span>
+                </div>
+                <div class="content-info">
+                    <div class="content-name">{{ card.owner.name + ' ' + card.owner.family }}</div>
+                    <div class="content-days">{{ getDaysSince(card.deprecateAt) }} روز از غیرفعال‌سازی</div>
+                </div>
+            </div>
+
+            <div class="content-actions">
+                <button (click)="ownerID=card.owner._id;showmodal=!showmodal" class="btn"
+                    [ngClass]="isActive ? 'btn-primary activate-btn' : 'btn-disabled'" [disabled]="!isActive"
+                    [attr.data-id]="card._id">
+                    فعال‌سازی مجدد
+                </button>
+                <button class="btn btn-secondary">رزرو</button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+
+<div class="modal-overlay" id="activationModal" [style]="showmodal?'display: flex':'display: none'">
+    <div class="modal" style="display: block;position: relative;">
+        <div class="modal-header">
+            <div class="modal-title">فعال&zwnj;سازی مجدد محتوا</div>
+            <button (click)="close()" class="modal-close">×</button>
+        </div>
+        <div class="modal-body" style="font-size: 15px;">
+            <div class="wizard-steps">
+                <div [class]="step===1?'wizard-step active':'wizard-step'" id="step1">انتخاب جایگاه</div>
+                <div [class]="step===2?'wizard-step active':'wizard-step'" id="step2">پیش فاکتور</div>
+                <div [class]="step===3?'wizard-step active':'wizard-step'" id="step3">تکمیل خرید</div>
+            </div>
+
+            <div [class]="step===1?'wizard-content active':'wizard-content'" id="step1-content">
+                <h3 style="font-size: 15px;">لطفا یک جایگاه را انتخاب کنید:</h3>
+                <div class="position-list">
+
+                    <ng-container *ngFor="let item of ads">
+                        <div class="position-card">
+                            <div class="position-info">
+                                <div class="position-title">جایگاه شماره {{item.position}}</div>
+                                <!-- <div class="position-details">جایگاه ویژه با نمایش در بالای صفحه اصلی</div> -->
+                                <div class="position-time-options">
+
+                                    <ng-container *ngFor="let m of item.newavailableMonth">
+                                        <div (click)="select_position(m,item)"
+                                            [class]="m.selected?'time-option selected':'time-option'">
+                                            {{m.title}}
+                                        </div>
+                                    </ng-container>
+                                </div>
+
+                                <div *ngIf="item.newprice" class="position-price">
+                                    {{item.newprice | priceFormatter}}
+                                    تومان</div>
+
+                            </div>
+
+                            <div class="position-actions">
+                                <button (click)="nextStep()" class="btn btn-primary buy-btn" data-position="1"
+                                    data-price="1500000" data-time="30">خرید</button>
+                            </div>
+
+                        </div>
+                    </ng-container>
+
+
+                </div>
+            </div>
+
+            <div [class]="step===2?'wizard-content active':'wizard-content'" id="step2-content">
+                <h3>پیش فاکتور</h3>
+                <div class="invoice">
+                    <div class="invoice-header">
+                        <div>شماره فاکتور: {{this._JarrahanOrderService.invoice_number}}</div>
+                        <div>تاریخ: <span id="invoice-date">
+
+                                {{todayshow | jalaliDate:
+                                "timeMonthName2"}}
+                            </span></div>
+                    </div>
+                    <div class="invoice-items">
+                        <div class="invoice-item">
+                            <div>جایگاه شماره <span id="position-number">{{selected_ads?.position}}</span> (<span
+                                    id="position-time">{{selected_title}}</span>)</div>
+                            <div><span id="position-price">
+                                    {{finalPrice
+                                    | priceFormatter}}
+                                </span> تومان</div>
+                        </div>
+                        <div class="invoice-item" id="discount-row" style="display: none;">
+                            <div>تخفیف</div>
+                            <div><span id="discount-amount">۰</span> تومان</div>
+                        </div>
+                        <div class="invoice-item">
+                            <div>مالیات بر ارزش افزوده ({{_JarrahanOrderService.tax_amount}}٪)</div>
+                            <div><span id="vat-amount">
+
+                                    @if(this._JarrahanOrderService.taxprice===0)
+                                    {
+                                    -
+                                    }
+                                    @else {
+                                    {{this._JarrahanOrderService.taxprice
+                                    | priceFormatter}}
+                                    }
+
+                                </span> تومان</div>
+                        </div>
+                    </div>
+
+                    <div class="invoice-total">
+
+                        <div class="invoice-total-item">
+                            <div>تخفیف:</div>
+                            <div><span id="total-price">
+                                    @if(this._JarrahanOrderService.discount_price===0)
+                                    {
+                                    -
+                                    }
+                                    @else {
+                                    {{this._JarrahanOrderService.discount_price
+                                    | priceFormatter}}
+                                    }
+                                </span> تومان</div>
+                        </div>
+
+
+                        <div class="invoice-total-item">
+                            <div>مبلغ قابل پرداخت:</div>
+                            <div><span id="total-price">
+                                    {{this._JarrahanOrderService.mainPrice
+                                    | priceFormatter}}
+                                </span> تومان</div>
+                        </div>
+
+                    </div>
+
+
+                </div>
+
+                <div class="discount-section">
+                    <div class="discount-title">اعمال تخفیف</div>
+                    <div class="discount-options">
+                        <div (click)="isdiscount=false;"
+                            [class]="isdiscount?'discount-option':'discount-option selected'" data-type="none">بدون
+                            تخفیف</div>
+                        <div (click)="isdiscount=true;"
+                            [class]="!isdiscount?'discount-option':'discount-option selected'" data-type="percentage">
+                            درصد تخفیف</div>
+                    </div>
+                    <div class="discount-percentage" id="discount-percentage-form" *ngIf="isdiscount">
+
+                        <input [disabled]="_JarrahanOrderService.discountapply"
+                            [(ngModel)]="_JarrahanOrderService.discount_percent" dir="ltr" appPercentageDirective
+                            placeholder="XX.XX" type="textbox">
+
+
+                        <span>درصد</span>
+
+                        <button *ngIf="!_JarrahanOrderService.discountapply" (click)="confirm($event)"
+                            class="btn btn-secondary" id="apply-discount-percentage">اعمال</button>
+
+
+                        <button *ngIf="_JarrahanOrderService.discountapply" (click)="confirm2($event)"
+                            class="btn btn-warning" id="apply-discount-percentage">
+                            حذف
+                        </button>
+
+
+                        <!-- <div class="it">
+
+                            <div class="ti">تخفیف کلی:</div>
+
+                            <div class="inp gt">
+
+                                <span>%</span>
+
+                                <input [disabled]="_JarrahanOrderService.discountapply"
+                                    [(ngModel)]="_JarrahanOrderService.discount_percent" dir="ltr"
+                                    appPercentageDirective placeholder="XX.XX" type="textbox">
+
+                                <i *ngIf="_JarrahanOrderService.discountapply" (click)="confirm2($event)"
+                                    [style.color]="_JarrahanOrderService.discountapply?'#f44336':''"
+                                    style="cursor: pointer;" class="fa fa-times-circle"></i>
+
+                                <i [class.dis]="_JarrahanOrderService.discount_percent===0"
+                                    *ngIf="!_JarrahanOrderService.discountapply" (click)="confirm($event)"
+                                    [style.color]="_JarrahanOrderService.discountapply?'#198754':''"
+                                    style="cursor: pointer;" class="fa fa-check"></i>
+
+                            </div>
+                        </div> -->
+
+                    </div>
+                </div>
+
+                <div class="discount-section">
+                    <div class="it">
+                        <div class="ti" style="margin-bottom: 8px;">مالیات:</div>
+                        <select [value]="_JarrahanOrderService.istax?'1':'0'" (change)="change_tax($event)">
+                            <option>انتخاب کنید</option>
+                            <option value="1">فعال</option>
+                            <option value="0">غیرفعال</option>
+                        </select>
+                        <span class="taxvalue" *ngIf="this._JarrahanOrderService.istax">
+                            مقدار مالیات
+                            {{_JarrahanOrderService.tax_amount}} درصد میباشد
+                        </span>
+
+                    </div>
+                    <br>
+
+                    <div class="it">
+                        <div class="ti" style="margin-bottom: 8px;">مهلت پرداخت *:</div>
+
+                        <div class="inp gt">
+                            <input [class.invalid]="this.ramaindate.value===null && submited" id="payDeadline"
+                                [min]="today" (dateChange)="nDateChange($event)" style="background-color: #fff;"
+                                [formControl]="ramaindate" readonly [value]="ramaindate" [matDatepicker]="date3"
+                                (click)="$event.stopPropagation();date3.open()" class="form-control ker"
+                                placeholder="انتخاب کنید ..." type="text">
+                            <mat-datepicker #date3></mat-datepicker>
+                        </div>
+
+                        <div *ngIf="this.ramaindate.value===null && submited" class="invalid-feedback">
+                            مهلت پرداخت را وارد کنید!
+                        </div>
+
+                        <span *ngIf="remaindate" class="taxvalue">
+                            {{this.remaindate | jalaliDate:
+                            "timeMonthName2"}}
+                        </span>
+
+                    </div>
+
+
+                </div>
+
+
+            </div>
+
+
+            <div [class]="step===3?'wizard-content active':'wizard-content'" id="step3-content">
+                <div class="success-page">
+                    <div class="success-icon">✓</div>
+                    <h2>خرید شما با موفقیت ثبت شد</h2>
+                    <p>از خرید شما متشکریم. جایگاه مورد نظر برای شما رزرو شده است.</p>
+
+                    <div class="tracking-code">
+                        کد پیگیری: {{this._JarrahanOrderService.invoice_number}}
+                    </div>
+
+                    <div class="payment-link-container">
+                        <a href="#" class="payment-link" id="payment-link">https://example.com/payment/TRK-98765</a>
+                        <button class="copy-btn" id="copy-link-btn">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round">
+                                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                            </svg>
+                            کپی لینک
+                        </button>
+                    </div>
+
+                    <p>می&zwnj;توانید لینک پرداخت را با دوستان خود به اشتراک بگذارید:</p>
+
+                    <div class="social-share">
+                        <a href="#" class="social-btn social-telegram">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round">
+                                <path
+                                    d="M21.198 2.433a2.242 2.242 0 0 0-1.022.215l-16.5 7.5a2.25 2.25 0 0 0 .126 4.073l3.9 1.205 2.306 6.54c.376 1.02 1.598 1.503 2.618 1.025a1.75 1.75 0 0 0 .713-.71l4-7a.75.75 0 0 1 .33-.32l4.773-2.173a2.25 2.25 0 0 0 1.153-2.872c-.236-.702-.85-1.242-1.596-1.483z">
+                                </path>
+                            </svg>
+                        </a>
+                        <a href="#" class="social-btn social-whatsapp">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round">
+                                <path
+                                    d="M17.498 14.382c-.301-.15-1.767-.867-2.04-.966-.273-.101-.473-.15-.673.15-.197.295-.771.964-.944 1.162-.175.195-.349.21-.646.075-.3-.15-1.263-.465-2.403-1.485-.888-.795-1.484-1.77-1.66-2.07-.174-.3-.019-.465.13-.615.136-.135.301-.345.451-.523.146-.181.194-.301.297-.496.1-.21.049-.375-.025-.524-.075-.15-.672-1.62-.922-2.206-.24-.584-.487-.51-.672-.51-.172-.015-.371-.015-.571-.015-.2 0-.523.074-.797.359-.273.3-1.045 1.02-1.045 2.475s1.07 2.865 1.219 3.075c.149.195 2.105 3.195 5.1 4.485.714.3 1.27.48 1.704.629.714.227 1.365.195 1.88.121.574-.091 1.767-.721 2.016-1.426.255-.705.255-1.29.18-1.425-.074-.135-.27-.21-.57-.345z">
+                                </path>
+                                <path
+                                    d="M20.52 3.449C12.831-3.984.106 1.407.101 11.893c0 2.096.549 4.14 1.595 5.945L0 24l6.335-1.652c1.746.943 3.71 1.444 5.71 1.447h.006c9.756 0 15.349-7.946 15.349-15.846.001-4.216-1.506-8.07-4.88-11.5zm-7.042 22.55h-.004a12.9 12.9 0 0 1-6.593-1.812l-.471-.28-4.907 1.283 1.308-4.776-.307-.484a12.866 12.866 0 0 1-1.976-6.839c.001-7.119 5.803-12.918 12.934-12.918 3.455 0 6.698 1.347 9.142 3.797 2.445 2.442 3.798 5.712 3.797 9.167-.002 7.118-5.804 12.912-12.923 12.912z">
+                                </path>
+                            </svg>
+                        </a>
+                        <a href="#" class="social-btn social-instagram">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round">
+                                <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+                                <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+                                <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+                            </svg>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="modal-footer">
+            <button class="btn btn-secondary" id="prevBtn" *ngIf="step==2" (click)="previusStep()">قبلی</button>
+            <button class="btn btn-primary" id="nextBtn" *ngIf="step===1" (click)="nextStep()">بعدی</button>
+            <button class="btn btn-success" id="finishBtn" *ngIf="step===2" (click)="ads_submit()">تایید نهایی</button>
+            <button class="btn btn-secondary" id="closeBtn" *ngIf="step===3"
+                (click)="close();ngAfterViewInit()">بستن</button>
+        </div>
+
+
+    </div>
+</div>
+
+
+<div class="modal-overlay" id="viewContentModal" [style]="showmodal2?'display: flex':'display: none'">
+    <div class="modal content-view-modal" style="display: block;position: relative;max-height: max-content;">
+        <div class="modal-header">
+            <div class="modal-title">نمایش محتوا</div>
+            <button (click)="close()" class="modal-close view-close">&times;</button>
+        </div>
+
+        <div class="modal-body" style="height: 62rem;
+    overflow-y: scroll;">
+
+            <div *ngFor="let item of selected_content?.contents">
+                <div class="ck-content content-details" [innerHTML]="item.content"></div>
+            </div>
+
+
+        </div>
+
+        <div class="modal-footer">
+            <button (click)="ownerID=selected_content?.owner._id;showmodal2=false;showmodal=true"
+                class="btn btn-primary activate-content-btn">فعال‌سازی مجدد</button>
+            <button (click)="close()" class="btn btn-secondary view-close-btn">بستن</button>
+        </div>
+    </div>
+</div>
+
+
+<app-alert-box [text]="'روش اعمال تخفیف را مشخص کنید'" [type]="'discount'" [ads]="this._JarrahanOrderService.adList"
+    (emitchange)="submit_confirm($event)" (mouseenter)="showconfirm_alert=true;"
+    (outsideClick)="showconfirm_alert=false" [open]="showconfirm_alert" [position]="position2"></app-alert-box>
+
+<app-alert-box [text]="'با حذف کد تخفیف، به حالت اولیه برمیگردد'" [type]="'discount-remove'"
+    (emitchange)="submit_confirm2($event)" (mouseenter)="showconfirm_alert2=true;"
+    (outsideClick)="showconfirm_alert2=false" [open]="showconfirm_alert2" [position]="position3"></app-alert-box>

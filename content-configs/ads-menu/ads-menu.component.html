@@ -1,0 +1,76 @@
+<!-- دکمه پلاس -->
+<button (mousedown)="$event.stopPropagation()" [class.showbtn]="isshowbtn(index)" class="plus-button" (click)="$event.stopPropagation();toggleMenu($event,index)">+</button>
+
+<!-- منو -->
+<div [class.show]="isopen(index)" (outsideClick)="menuout()" (mousedown)="$event.stopPropagation()" class="menu"
+    [ngClass]="{ 'menu-up': _ContentService.openUp, 'menu-down': !_ContentService.openUp }" *ngIf="isopen(index)">
+    <div class="menu-items">
+
+        <div class="menu-list-items">
+            <button class="menu-item" (click)="newcontent()">
+                <span class="menu-item-text">
+                    <i class="fa fa-file-text" aria-hidden="true"></i>
+                </span>
+
+                <span class="menu-item-text">
+                    محتوای جدید
+                </span>
+
+            </button>
+        </div>
+
+        <div class="menu-list-items">
+            <button class="menu-item" (click)="newads('special')">
+                <span class="menu-item-text">
+                 <i class="fa fa-star" aria-hidden="true"></i>
+                </span>
+
+                <span class="menu-item-text">
+                    تبلیغ اختصاصی
+                </span>
+
+            </button>
+        </div>
+
+        <div class="menu-list-items">
+            <button class="menu-item" (click)="newads('list')">
+                <span class="menu-item-text">
+                   <i class="fa fa-list-alt" aria-hidden="true"></i>
+                </span>
+
+                <span class="menu-item-text">
+                    تبلیغ لیستی
+                </span>
+
+            </button>
+        </div>
+
+        <div class="menu-list-items">
+            <button class="menu-item">
+                <span class="menu-item-text">
+                  <i class="fa fa-flag" aria-hidden="true"></i>
+                </span>
+
+                <span class="menu-item-text">
+                    تبلیغ بنری
+                </span>
+
+            </button>
+        </div>
+
+        <div class="menu-list-items">
+            <button  (click)="newads('video')" class="menu-item">
+                <span class="menu-item-text">
+                       <i class="fa fa-video-camera" aria-hidden="true"></i>
+                </span>
+
+                <span class="menu-item-text">
+                    تبلیغ ویدیویی
+                </span>
+
+            </button>
+        </div>
+
+
+    </div>
+</div>
